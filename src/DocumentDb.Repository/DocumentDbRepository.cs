@@ -99,6 +99,17 @@ namespace DocumentDB.Repository
             return await FirstOrDefaultAsync(d => GetId(d).Equals(id));
         }
 
+        /// <summary>
+        /// This version of GetById seems to be faster.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public async Task<T> GetByIdAsync(string id)
+        {
+            var retVal = await GetDocumentByIdAsync(id);
+            return (T)(dynamic)retVal;
+        }
+
         public async Task<T> FirstOrDefaultAsync(Func<T, bool> predicate)
         {
             return
@@ -117,6 +128,16 @@ namespace DocumentDB.Repository
         public async Task<IQueryable<T>> QueryAsync()
         {
             return _client.CreateDocumentQuery<T>((await _collection).DocumentsLink);
+        }
+
+        /// <summary>
+        /// Use DocumentDb SQL command with this method.
+        /// </summary>
+        /// <param name="sqlCommand"></param>
+        /// <returns></returns>
+        public async Task<IQueryable<T>> QueryWithSqlAsync(string sqlCommand)
+        {
+            return _client.CreateDocumentQuery<T>((await _collection).SelfLink, sqlCommand);
         }
 
         private string TryGetIdProperty(Expression<Func<T, object>> idNameFactory)
